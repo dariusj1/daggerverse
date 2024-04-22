@@ -3,6 +3,8 @@ package main
 import (
 	"bufio"
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -21,6 +23,18 @@ type AwsSecrets struct {
 	SecretAccessKey string
 	SessionToken    string
 	ECRSecret       string
+}
+
+func (aws *AwsSecrets) Json() (string, error) {
+	if aws == nil {
+		return "", errors.New("cannot get secrets")
+	}
+	b, err := json.Marshal(*aws)
+	if err != nil {
+		fmt.Println(err)
+		return "", err
+	}
+	return string(b), nil
 }
 
 func (aws *AwsOidcAuth) LoginOidc(
@@ -51,7 +65,37 @@ func (aws *AwsOidcAuth) LoginOidc(
 		sessionName = fmt.Sprintf("OIDC_LOGIN-%s", region)
 	}
 
-	exported, err := aws.authenticate(ctx, token, region, roleArn, sessionName, durationSec)
+	exported, err := aws.authenticateOidc(ctx, token, region, roleArn, sessionName, durationSec)
+	if err != nil {
+		return nil, err
+	}
+
+	raw := aws.readFileValues(exported)
+
+	secrets, err := aws.toSecrets(raw)
+	if err != nil {
+		return nil, err
+	}
+
+	return secrets, nil
+}
+
+func (aws *AwsOidcAuth) LoginSession(
+	ctx context.Context,
+
+	// AWS_ACCESS_KEY_ID
+	keyId string,
+	// AWS_SECRET_ACCESS_KEY
+	key string,
+	// AWS_SESSION_TOKEN
+	token string,
+	// AWS_DEFAULT_REGION
+	// +optional
+	// +default "us-east-1"
+	region string,
+) (*AwsSecrets, error) {
+
+	exported, err := aws.authenticateSession(ctx, keyId, key, token, region)
 	if err != nil {
 		return nil, err
 	}
@@ -70,17 +114,17 @@ func (aws *AwsOidcAuth) toSecrets(raw map[string]string) (*AwsSecrets, error) {
 	duration, err := strconv.Atoi(raw["AWS_SESSION_DURATION"])
 	if err != nil {
 		fmt.Println("Cannot find 'AWS_SESSION_DURATION'")
-		return nil, err
+		//return nil, err
 	}
 	iss, err := strconv.Atoi(raw["AWS_SESSION_ISS_UTC"])
 	if err != nil {
 		fmt.Println("Cannot find 'AWS_SESSION_ISS_UTC'")
-		return nil, err
+		//return nil, err
 	}
 	exp, err := strconv.Atoi(raw["AWS_SESSION_EXP_UTC"])
 	if err != nil {
 		fmt.Println("Cannot find 'AWS_SESSION_EXP_UTC'")
-		return nil, err
+		//return nil, err
 	}
 	return &AwsSecrets{
 		DurationSec:     duration,
@@ -95,7 +139,7 @@ func (aws *AwsOidcAuth) toSecrets(raw map[string]string) (*AwsSecrets, error) {
 	}, nil
 }
 
-func (aws *AwsOidcAuth) authenticate(ctx context.Context, token string, region string, roleArn string, sessionName string, durationSec int) (string, error) {
+func (aws *AwsOidcAuth) authenticateOidc(ctx context.Context, token string, region string, roleArn string, sessionName string, durationSec int) (string, error) {
 	credsFilePath := "/tmp/aws_creds"
 
 	exported := dag.Container().From("public.ecr.aws/aws-cli/aws-cli").
@@ -140,6 +184,28 @@ func (aws *AwsOidcAuth) authenticate(ctx context.Context, token string, region s
 				export AWS_ECR_SECRET="%s"
 			' \
 			$(aws ecr get-login-password --region "${AWS_DEFAULT_REGION}") >> "${CREDS_FILE_PATH}"`}).
+		File(credsFilePath)
+	return exported.Contents(ctx)
+}
+
+func (aws *AwsOidcAuth) authenticateSession(ctx context.Context, accessKeyId string, secretAccessKey string, sessionToken string, region string) (string, error) {
+	credsFilePath := "/tmp/aws_creds"
+
+	exported := dag.Container().From("public.ecr.aws/aws-cli/aws-cli").
+		WithoutEntrypoint().
+		WithEnvVariable("CREDS_FILE_PATH", credsFilePath).
+		WithExec([]string{"bash", "-c", "env"}).
+		WithExec([]string{"bash", "-ec",
+			fmt.Sprintf(`echo '
+				export AWS_ACCESS_KEY_ID="%s"
+				export AWS_SECRET_ACCESS_KEY="%s"
+				export AWS_SESSION_TOKEN="%s"
+				export AWS_DEFAULT_REGION="%s"
+				' >> "${CREDS_FILE_PATH}"`, accessKeyId, secretAccessKey, sessionToken, region)}).
+		WithExec([]string{"bash", "-ec",
+			`. "${CREDS_FILE_PATH}"
+			ecr_secret=$(aws ecr get-login-password --region "${AWS_DEFAULT_REGION}")
+			printf 'export AWS_ECR_SECRET="%s"' "${ecr_secret}" >> "${CREDS_FILE_PATH}"`}).
 		File(credsFilePath)
 	return exported.Contents(ctx)
 }
