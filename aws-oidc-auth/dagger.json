@@ -1,0 +1,6 @@
+{
+  "name": "aws-oidc-auth",
+  "sdk": "go",
+  "source": "dagger",
+  "engineVersion": "v0.10.1"
+}

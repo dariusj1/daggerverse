@@ -1,0 +1,12 @@
+{
+  "name": "aws-ecr-push",
+  "sdk": "go",
+  "dependencies": [
+    {
+      "name": "aws-oidc-auth",
+      "source": "../aws-oidc-auth"
+    }
+  ],
+  "source": "dagger",
+  "engineVersion": "v0.10.1"
+}
