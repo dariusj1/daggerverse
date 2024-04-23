@@ -48,12 +48,12 @@ func (aws *AwsOidcAuth) LoginOidc(
 
 	// Session duration in seconds (min 900s/15min)
 	// +optional
-	// +default 900
+	// +default=900
 	durationSec int,
 
 	// Default region
 	// +optional
-	// +default "us-east-1"
+	// +default="us-east-1"
 	region string,
 
 	// Session name (will appear in logs and billing)
@@ -91,7 +91,7 @@ func (aws *AwsOidcAuth) LoginSession(
 	token string,
 	// AWS_DEFAULT_REGION
 	// +optional
-	// +default "us-east-1"
+	// +default="us-east-1"
 	region string,
 ) (*AwsSecrets, error) {
 
