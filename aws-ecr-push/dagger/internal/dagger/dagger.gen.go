@@ -309,12 +309,10 @@ func (r *AwsOidcAuth) UnmarshalJSON(bs []byte) error {
 type AwsOidcAuthLoginOidcOpts struct {
 	//
 	// Session duration in seconds (min 900s/15min)
-	// +default 900
 	//
 	DurationSec int
 	//
 	// Default region
-	// +default "us-east-1"
 	//
 	Region string
 	//
@@ -351,7 +349,6 @@ func (r *AwsOidcAuth) LoginOidc(token string, roleArn string, opts ...AwsOidcAut
 type AwsOidcAuthLoginSessionOpts struct {
 	//
 	// AWS_DEFAULT_REGION
-	// +default "us-east-1"
 	//
 	Region string
 }

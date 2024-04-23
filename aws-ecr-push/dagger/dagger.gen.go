@@ -706,13 +706,6 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg tag", err))
 				}
 			}
-			var durationSec int
-			if inputArgs["durationSec"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["durationSec"]), &durationSec)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg durationSec", err))
-				}
-			}
 			var region string
 			if inputArgs["region"] != nil {
 				err = json.Unmarshal([]byte(inputArgs["region"]), &region)
@@ -720,14 +713,7 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg region", err))
 				}
 			}
-			var sessionName string
-			if inputArgs["sessionName"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["sessionName"]), &sessionName)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg sessionName", err))
-				}
-			}
-			return (*AwsEcrPush).BuildAndPush(&parent, ctx, root, dockerfile, keyId, key, token, tag, durationSec, region, sessionName)
+			return (*AwsEcrPush).BuildAndPush(&parent, ctx, root, dockerfile, keyId, key, token, tag, region)
 		case "PublishOidc":
 			var parent AwsEcrPush
 			err = json.Unmarshal(parentJSON, &parent)
@@ -825,13 +811,6 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg tag", err))
 				}
 			}
-			var durationSec int
-			if inputArgs["durationSec"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["durationSec"]), &durationSec)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg durationSec", err))
-				}
-			}
 			var region string
 			if inputArgs["region"] != nil {
 				err = json.Unmarshal([]byte(inputArgs["region"]), &region)
@@ -839,14 +818,7 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg region", err))
 				}
 			}
-			var sessionName string
-			if inputArgs["sessionName"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["sessionName"]), &sessionName)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg sessionName", err))
-				}
-			}
-			return (*AwsEcrPush).Publish(&parent, ctx, container, keyId, key, token, tag, durationSec, region, sessionName)
+			return (*AwsEcrPush).Publish(&parent, ctx, container, keyId, key, token, tag, region)
 		case "PublishContainer":
 			var parent AwsEcrPush
 			err = json.Unmarshal(parentJSON, &parent)
@@ -907,25 +879,23 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 						dag.Function("BuildAndPushOidc",
 							dag.TypeDef().WithKind(StringKind)).
 							WithArg("root", dag.TypeDef().WithObject("Directory"), FunctionWithArgOpts{Description: "Path to a root context directory for the Dockerfile build"}).
-							WithArg("dockerfile", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "Path to a Dockerfile to build against\n+default \"Dockerfile\""}).
+							WithArg("dockerfile", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "Path to a Dockerfile to build against", DefaultValue: JSON("\"Dockerfile\"")}).
 							WithArg("token", dag.TypeDef().WithKind(StringKind), FunctionWithArgOpts{Description: "OIDC token"}).
 							WithArg("roleArn", dag.TypeDef().WithKind(StringKind), FunctionWithArgOpts{Description: "AWS IAM Role to assume"}).
 							WithArg("tag", dag.TypeDef().WithKind(StringKind), FunctionWithArgOpts{Description: "The image name assigned to the container before uploading (should start with an ECR address and optionally include a :tag)"}).
-							WithArg("durationSec", dag.TypeDef().WithKind(IntegerKind).WithOptional(true), FunctionWithArgOpts{Description: "Session duration in seconds (min 900s/15min)\n+default 900"}).
-							WithArg("region", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "AWS_DEFAULT_REGION\n+default \"us-east-1\""}).
+							WithArg("durationSec", dag.TypeDef().WithKind(IntegerKind).WithOptional(true), FunctionWithArgOpts{Description: "Session duration in seconds (min 900s/15min)", DefaultValue: JSON("900")}).
+							WithArg("region", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "AWS_DEFAULT_REGION", DefaultValue: JSON("\"us-east-1\"")}).
 							WithArg("sessionName", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "Session name (will appear in logs and billing)"})).
 					WithFunction(
 						dag.Function("BuildAndPush",
 							dag.TypeDef().WithKind(StringKind)).
 							WithArg("root", dag.TypeDef().WithObject("Directory"), FunctionWithArgOpts{Description: "Path to a root context directory for the Dockerfile build"}).
-							WithArg("dockerfile", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "Path to a Dockerfile to build against\n+default \"Dockerfile\""}).
-							WithArg("keyId", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "AWS_ACCESS_KEY_ID"}).
-							WithArg("key", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "AWS_SECRET_ACCESS_KEY"}).
-							WithArg("token", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "AWS_SESSION_TOKEN"}).
+							WithArg("dockerfile", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "Path to a Dockerfile to build against", DefaultValue: JSON("\"Dockerfile\"")}).
+							WithArg("keyId", dag.TypeDef().WithKind(StringKind), FunctionWithArgOpts{Description: "AWS_ACCESS_KEY_ID"}).
+							WithArg("key", dag.TypeDef().WithKind(StringKind), FunctionWithArgOpts{Description: "AWS_SECRET_ACCESS_KEY"}).
+							WithArg("token", dag.TypeDef().WithKind(StringKind), FunctionWithArgOpts{Description: "AWS_SESSION_TOKEN"}).
 							WithArg("tag", dag.TypeDef().WithKind(StringKind), FunctionWithArgOpts{Description: "The image name assigned to the container before uploading (should start with an ECR address and optionally include a :tag)"}).
-							WithArg("durationSec", dag.TypeDef().WithKind(IntegerKind).WithOptional(true), FunctionWithArgOpts{Description: "Session duration in seconds (min 900s/15min)\n+default 900"}).
-							WithArg("region", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "AWS_DEFAULT_REGION\n+default \"us-east-1\""}).
-							WithArg("sessionName", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "Session name (will appear in logs and billing)"})).
+							WithArg("region", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "AWS_DEFAULT_REGION", DefaultValue: JSON("\"us-east-1\"")})).
 					WithFunction(
 						dag.Function("PublishOidc",
 							dag.TypeDef().WithKind(StringKind)).
@@ -933,8 +903,8 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 							WithArg("token", dag.TypeDef().WithKind(StringKind), FunctionWithArgOpts{Description: "OIDC token"}).
 							WithArg("roleArn", dag.TypeDef().WithKind(StringKind), FunctionWithArgOpts{Description: "AWS IAM Role to assume"}).
 							WithArg("tag", dag.TypeDef().WithKind(StringKind), FunctionWithArgOpts{Description: "The image name assigned to the container before uploading (should start with an ECR address and optionally include a :tag)"}).
-							WithArg("durationSec", dag.TypeDef().WithKind(IntegerKind).WithOptional(true), FunctionWithArgOpts{Description: "Session duration in seconds (min 900s/15min)\n+default 900"}).
-							WithArg("region", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "Default region\n+default \"us-east-1\""}).
+							WithArg("durationSec", dag.TypeDef().WithKind(IntegerKind).WithOptional(true), FunctionWithArgOpts{Description: "Session duration in seconds (min 900s/15min)", DefaultValue: JSON("900")}).
+							WithArg("region", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "Default region", DefaultValue: JSON("\"us-east-1\"")}).
 							WithArg("sessionName", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "Session name (will appear in logs and billing)"})).
 					WithFunction(
 						dag.Function("Publish",
@@ -944,9 +914,7 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 							WithArg("key", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "AWS_SECRET_ACCESS_KEY"}).
 							WithArg("token", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "AWS_SESSION_TOKEN"}).
 							WithArg("tag", dag.TypeDef().WithKind(StringKind), FunctionWithArgOpts{Description: "The image name assigned to the container before uploading (should start with an ECR address and optionally include a :tag)"}).
-							WithArg("durationSec", dag.TypeDef().WithKind(IntegerKind).WithOptional(true), FunctionWithArgOpts{Description: "Session duration in seconds (min 900s/15min)\n+default 900"}).
-							WithArg("region", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "Default region\n+default \"us-east-1\""}).
-							WithArg("sessionName", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "Session name (will appear in logs and billing)"})).
+							WithArg("region", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "Default region", DefaultValue: JSON("\"us-east-1\"")})).
 					WithFunction(
 						dag.Function("PublishContainer",
 							dag.TypeDef().WithKind(StringKind)).
@@ -957,7 +925,7 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 						dag.Function("BuildDockerfile",
 							dag.TypeDef().WithObject("Container")).
 							WithArg("root", dag.TypeDef().WithObject("Directory")).
-							WithArg("dockerfile", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "+default \"Dockerfile\""}))), nil
+							WithArg("dockerfile", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{DefaultValue: JSON("\"Dockerfile\"")}))), nil
 	default:
 		return nil, fmt.Errorf("unknown object %s", parentName)
 	}
