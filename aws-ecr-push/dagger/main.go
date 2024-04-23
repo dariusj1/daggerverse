@@ -108,13 +108,10 @@ func (ecr *AwsEcrPush) Publish(ctx context.Context,
 	// Container to publish
 	container *Container,
 	// AWS_ACCESS_KEY_ID
-	// +optional
 	keyId string,
 	// AWS_SECRET_ACCESS_KEY
-	// +optional
 	key string,
 	// AWS_SESSION_TOKEN
-	// +optional
 	token string,
 	// The image name assigned to the container before uploading (should start with an ECR address and optionally include a :tag)
 	tag string,
