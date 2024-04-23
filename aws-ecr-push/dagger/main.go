@@ -26,7 +26,7 @@ func (ecr *AwsEcrPush) BuildAndPushOidc(ctx context.Context,
 	// +default 900
 	durationSec int,
 
-	// Default region
+	// AWS_DEFAULT_REGION
 	// +optional
 	// +default "us-east-1"
 	region string,
@@ -36,6 +36,32 @@ func (ecr *AwsEcrPush) BuildAndPushOidc(ctx context.Context,
 	sessionName string,
 ) (string, error) {
 	return ecr.PublishOidc(ctx, ecr.BuildDockerfile(root, dockerfile), token, roleArn, tag, durationSec, region, sessionName)
+}
+
+func (ecr *AwsEcrPush) BuildAndPush(ctx context.Context,
+	// Path to a root context directory for the Dockerfile build
+	root *Directory,
+	// Path to a Dockerfile to build against
+	// +optional
+	// +default "Dockerfile"
+	dockerfile string,
+	// AWS_ACCESS_KEY_ID
+	// +optional
+	keyId string,
+	// AWS_SECRET_ACCESS_KEY
+	// +optional
+	key string,
+	// AWS_SESSION_TOKEN
+	// +optional
+	token string,
+	// The image name assigned to the container before uploading (should start with an ECR address and optionally include a :tag)
+	tag string,
+	// AWS_DEFAULT_REGION
+	// +optional
+	// +default "us-east-1"
+	region string,
+) (string, error) {
+	return ecr.Publish(ctx, ecr.BuildDockerfile(root, dockerfile), keyId, key, token, tag, region)
 }
 
 func (ecr *AwsEcrPush) PublishOidc(ctx context.Context,
@@ -64,6 +90,35 @@ func (ecr *AwsEcrPush) PublishOidc(ctx context.Context,
 		Region:      region,
 		SessionName: sessionName,
 	})
+
+	ecrSecret, err := secrets.Ecrsecret(ctx)
+	if err != nil || ecrSecret == "" {
+		fmt.Println("Failed to get ECR secret")
+		return "", err
+	}
+	return ecr.PublishContainer(ctx, container, tag, ecrSecret)
+}
+
+func (ecr *AwsEcrPush) Publish(ctx context.Context,
+	// Container to publish
+	container *Container,
+	// AWS_ACCESS_KEY_ID
+	// +optional
+	keyId string,
+	// AWS_SECRET_ACCESS_KEY
+	// +optional
+	key string,
+	// AWS_SESSION_TOKEN
+	// +optional
+	token string,
+	// The image name assigned to the container before uploading (should start with an ECR address and optionally include a :tag)
+	tag string,
+	// Default region
+	// +optional
+	// +default "us-east-1"
+	region string,
+) (string, error) {
+	secrets := dag.AwsOidcAuth().LoginSession(keyId, key, token, AwsOidcAuthLoginSessionOpts{Region: region})
 
 	ecrSecret, err := secrets.Ecrsecret(ctx)
 	if err != nil || ecrSecret == "" {

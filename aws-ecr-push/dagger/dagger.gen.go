@@ -139,6 +139,9 @@ type AwsOidcAuth = dagger.AwsOidcAuth
 // AwsOidcAuthLoginOidcOpts contains options for AwsOidcAuth.LoginOidc
 type AwsOidcAuthLoginOidcOpts = dagger.AwsOidcAuthLoginOidcOpts
 
+// AwsOidcAuthLoginSessionOpts contains options for AwsOidcAuth.LoginSession
+type AwsOidcAuthLoginSessionOpts = dagger.AwsOidcAuthLoginSessionOpts
+
 type AwsOidcAuthAwsSecrets = dagger.AwsOidcAuthAwsSecrets
 
 // A directory whose contents persist across runs.
@@ -592,13 +595,307 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 	switch parentName {
 	case "AwsEcrPush":
 		switch fnName {
-		case "PushOidc":
+		case "BuildAndPushOidc":
 			var parent AwsEcrPush
 			err = json.Unmarshal(parentJSON, &parent)
 			if err != nil {
 				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
 			}
-			return (*AwsEcrPush).PushOidc(&parent), nil
+			var root *Directory
+			if inputArgs["root"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["root"]), &root)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg root", err))
+				}
+			}
+			var dockerfile string
+			if inputArgs["dockerfile"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["dockerfile"]), &dockerfile)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg dockerfile", err))
+				}
+			}
+			var token string
+			if inputArgs["token"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["token"]), &token)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg token", err))
+				}
+			}
+			var roleArn string
+			if inputArgs["roleArn"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["roleArn"]), &roleArn)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg roleArn", err))
+				}
+			}
+			var tag string
+			if inputArgs["tag"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["tag"]), &tag)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg tag", err))
+				}
+			}
+			var durationSec int
+			if inputArgs["durationSec"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["durationSec"]), &durationSec)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg durationSec", err))
+				}
+			}
+			var region string
+			if inputArgs["region"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["region"]), &region)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg region", err))
+				}
+			}
+			var sessionName string
+			if inputArgs["sessionName"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["sessionName"]), &sessionName)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg sessionName", err))
+				}
+			}
+			return (*AwsEcrPush).BuildAndPushOidc(&parent, ctx, root, dockerfile, token, roleArn, tag, durationSec, region, sessionName)
+		case "BuildAndPush":
+			var parent AwsEcrPush
+			err = json.Unmarshal(parentJSON, &parent)
+			if err != nil {
+				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
+			}
+			var root *Directory
+			if inputArgs["root"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["root"]), &root)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg root", err))
+				}
+			}
+			var dockerfile string
+			if inputArgs["dockerfile"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["dockerfile"]), &dockerfile)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg dockerfile", err))
+				}
+			}
+			var keyId string
+			if inputArgs["keyId"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["keyId"]), &keyId)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg keyId", err))
+				}
+			}
+			var key string
+			if inputArgs["key"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["key"]), &key)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg key", err))
+				}
+			}
+			var token string
+			if inputArgs["token"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["token"]), &token)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg token", err))
+				}
+			}
+			var tag string
+			if inputArgs["tag"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["tag"]), &tag)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg tag", err))
+				}
+			}
+			var durationSec int
+			if inputArgs["durationSec"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["durationSec"]), &durationSec)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg durationSec", err))
+				}
+			}
+			var region string
+			if inputArgs["region"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["region"]), &region)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg region", err))
+				}
+			}
+			var sessionName string
+			if inputArgs["sessionName"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["sessionName"]), &sessionName)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg sessionName", err))
+				}
+			}
+			return (*AwsEcrPush).BuildAndPush(&parent, ctx, root, dockerfile, keyId, key, token, tag, durationSec, region, sessionName)
+		case "PublishOidc":
+			var parent AwsEcrPush
+			err = json.Unmarshal(parentJSON, &parent)
+			if err != nil {
+				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
+			}
+			var container *Container
+			if inputArgs["container"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["container"]), &container)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg container", err))
+				}
+			}
+			var token string
+			if inputArgs["token"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["token"]), &token)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg token", err))
+				}
+			}
+			var roleArn string
+			if inputArgs["roleArn"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["roleArn"]), &roleArn)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg roleArn", err))
+				}
+			}
+			var tag string
+			if inputArgs["tag"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["tag"]), &tag)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg tag", err))
+				}
+			}
+			var durationSec int
+			if inputArgs["durationSec"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["durationSec"]), &durationSec)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg durationSec", err))
+				}
+			}
+			var region string
+			if inputArgs["region"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["region"]), &region)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg region", err))
+				}
+			}
+			var sessionName string
+			if inputArgs["sessionName"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["sessionName"]), &sessionName)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg sessionName", err))
+				}
+			}
+			return (*AwsEcrPush).PublishOidc(&parent, ctx, container, token, roleArn, tag, durationSec, region, sessionName)
+		case "Publish":
+			var parent AwsEcrPush
+			err = json.Unmarshal(parentJSON, &parent)
+			if err != nil {
+				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
+			}
+			var container *Container
+			if inputArgs["container"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["container"]), &container)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg container", err))
+				}
+			}
+			var keyId string
+			if inputArgs["keyId"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["keyId"]), &keyId)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg keyId", err))
+				}
+			}
+			var key string
+			if inputArgs["key"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["key"]), &key)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg key", err))
+				}
+			}
+			var token string
+			if inputArgs["token"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["token"]), &token)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg token", err))
+				}
+			}
+			var tag string
+			if inputArgs["tag"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["tag"]), &tag)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg tag", err))
+				}
+			}
+			var durationSec int
+			if inputArgs["durationSec"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["durationSec"]), &durationSec)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg durationSec", err))
+				}
+			}
+			var region string
+			if inputArgs["region"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["region"]), &region)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg region", err))
+				}
+			}
+			var sessionName string
+			if inputArgs["sessionName"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["sessionName"]), &sessionName)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg sessionName", err))
+				}
+			}
+			return (*AwsEcrPush).Publish(&parent, ctx, container, keyId, key, token, tag, durationSec, region, sessionName)
+		case "PublishContainer":
+			var parent AwsEcrPush
+			err = json.Unmarshal(parentJSON, &parent)
+			if err != nil {
+				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
+			}
+			var container *Container
+			if inputArgs["container"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["container"]), &container)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg container", err))
+				}
+			}
+			var tag string
+			if inputArgs["tag"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["tag"]), &tag)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg tag", err))
+				}
+			}
+			var ecrSecret string
+			if inputArgs["ecrSecret"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["ecrSecret"]), &ecrSecret)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg ecrSecret", err))
+				}
+			}
+			return (*AwsEcrPush).PublishContainer(&parent, ctx, container, tag, ecrSecret)
+		case "BuildDockerfile":
+			var parent AwsEcrPush
+			err = json.Unmarshal(parentJSON, &parent)
+			if err != nil {
+				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
+			}
+			var root *Directory
+			if inputArgs["root"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["root"]), &root)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg root", err))
+				}
+			}
+			var dockerfile string
+			if inputArgs["dockerfile"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["dockerfile"]), &dockerfile)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg dockerfile", err))
+				}
+			}
+			return (*AwsEcrPush).BuildDockerfile(&parent, root, dockerfile), nil
 		default:
 			return nil, fmt.Errorf("unknown function %s", fnName)
 		}
@@ -607,8 +904,60 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 			WithObject(
 				dag.TypeDef().WithObject("AwsEcrPush").
 					WithFunction(
-						dag.Function("PushOidc",
-							dag.TypeDef().WithKind(StringKind)))), nil
+						dag.Function("BuildAndPushOidc",
+							dag.TypeDef().WithKind(StringKind)).
+							WithArg("root", dag.TypeDef().WithObject("Directory"), FunctionWithArgOpts{Description: "Path to a root context directory for the Dockerfile build"}).
+							WithArg("dockerfile", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "Path to a Dockerfile to build against\n+default \"Dockerfile\""}).
+							WithArg("token", dag.TypeDef().WithKind(StringKind), FunctionWithArgOpts{Description: "OIDC token"}).
+							WithArg("roleArn", dag.TypeDef().WithKind(StringKind), FunctionWithArgOpts{Description: "AWS IAM Role to assume"}).
+							WithArg("tag", dag.TypeDef().WithKind(StringKind), FunctionWithArgOpts{Description: "The image name assigned to the container before uploading (should start with an ECR address and optionally include a :tag)"}).
+							WithArg("durationSec", dag.TypeDef().WithKind(IntegerKind).WithOptional(true), FunctionWithArgOpts{Description: "Session duration in seconds (min 900s/15min)\n+default 900"}).
+							WithArg("region", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "AWS_DEFAULT_REGION\n+default \"us-east-1\""}).
+							WithArg("sessionName", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "Session name (will appear in logs and billing)"})).
+					WithFunction(
+						dag.Function("BuildAndPush",
+							dag.TypeDef().WithKind(StringKind)).
+							WithArg("root", dag.TypeDef().WithObject("Directory"), FunctionWithArgOpts{Description: "Path to a root context directory for the Dockerfile build"}).
+							WithArg("dockerfile", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "Path to a Dockerfile to build against\n+default \"Dockerfile\""}).
+							WithArg("keyId", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "AWS_ACCESS_KEY_ID"}).
+							WithArg("key", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "AWS_SECRET_ACCESS_KEY"}).
+							WithArg("token", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "AWS_SESSION_TOKEN"}).
+							WithArg("tag", dag.TypeDef().WithKind(StringKind), FunctionWithArgOpts{Description: "The image name assigned to the container before uploading (should start with an ECR address and optionally include a :tag)"}).
+							WithArg("durationSec", dag.TypeDef().WithKind(IntegerKind).WithOptional(true), FunctionWithArgOpts{Description: "Session duration in seconds (min 900s/15min)\n+default 900"}).
+							WithArg("region", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "AWS_DEFAULT_REGION\n+default \"us-east-1\""}).
+							WithArg("sessionName", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "Session name (will appear in logs and billing)"})).
+					WithFunction(
+						dag.Function("PublishOidc",
+							dag.TypeDef().WithKind(StringKind)).
+							WithArg("container", dag.TypeDef().WithObject("Container"), FunctionWithArgOpts{Description: "Container to publish"}).
+							WithArg("token", dag.TypeDef().WithKind(StringKind), FunctionWithArgOpts{Description: "OIDC token"}).
+							WithArg("roleArn", dag.TypeDef().WithKind(StringKind), FunctionWithArgOpts{Description: "AWS IAM Role to assume"}).
+							WithArg("tag", dag.TypeDef().WithKind(StringKind), FunctionWithArgOpts{Description: "The image name assigned to the container before uploading (should start with an ECR address and optionally include a :tag)"}).
+							WithArg("durationSec", dag.TypeDef().WithKind(IntegerKind).WithOptional(true), FunctionWithArgOpts{Description: "Session duration in seconds (min 900s/15min)\n+default 900"}).
+							WithArg("region", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "Default region\n+default \"us-east-1\""}).
+							WithArg("sessionName", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "Session name (will appear in logs and billing)"})).
+					WithFunction(
+						dag.Function("Publish",
+							dag.TypeDef().WithKind(StringKind)).
+							WithArg("container", dag.TypeDef().WithObject("Container"), FunctionWithArgOpts{Description: "Container to publish"}).
+							WithArg("keyId", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "AWS_ACCESS_KEY_ID"}).
+							WithArg("key", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "AWS_SECRET_ACCESS_KEY"}).
+							WithArg("token", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "AWS_SESSION_TOKEN"}).
+							WithArg("tag", dag.TypeDef().WithKind(StringKind), FunctionWithArgOpts{Description: "The image name assigned to the container before uploading (should start with an ECR address and optionally include a :tag)"}).
+							WithArg("durationSec", dag.TypeDef().WithKind(IntegerKind).WithOptional(true), FunctionWithArgOpts{Description: "Session duration in seconds (min 900s/15min)\n+default 900"}).
+							WithArg("region", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "Default region\n+default \"us-east-1\""}).
+							WithArg("sessionName", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "Session name (will appear in logs and billing)"})).
+					WithFunction(
+						dag.Function("PublishContainer",
+							dag.TypeDef().WithKind(StringKind)).
+							WithArg("container", dag.TypeDef().WithObject("Container")).
+							WithArg("tag", dag.TypeDef().WithKind(StringKind)).
+							WithArg("ecrSecret", dag.TypeDef().WithKind(StringKind))).
+					WithFunction(
+						dag.Function("BuildDockerfile",
+							dag.TypeDef().WithObject("Container")).
+							WithArg("root", dag.TypeDef().WithObject("Directory")).
+							WithArg("dockerfile", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "+default \"Dockerfile\""}))), nil
 	default:
 		return nil, fmt.Errorf("unknown object %s", parentName)
 	}
