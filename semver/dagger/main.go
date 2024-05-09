@@ -138,7 +138,7 @@ func (r *Semver) getVersionFromPomXml(ctx context.Context, src *Directory) *stri
 func (r *Semver) getVersionFromPackageJson(ctx context.Context, src *Directory) *string {
 	contents, err := src.File("package.json").Contents(ctx)
 	if err != nil {
-		fmt.Println("Cannot find a packge.json")
+		fmt.Println("Cannot find a package.json")
 		return nil
 	}
 	root, err := oj.ParseString(contents)

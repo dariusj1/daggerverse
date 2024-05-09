@@ -321,7 +321,8 @@ type AwsOidcAuthLoginOidcOpts struct {
 	SessionName string
 }
 
-func (r *AwsOidcAuth) LoginOidc(token string, roleArn string, opts ...AwsOidcAuthLoginOidcOpts) *AwsOidcAuthAwsSecrets {
+func (r *AwsOidcAuth) LoginOidc(token *Secret, roleArn string, opts ...AwsOidcAuthLoginOidcOpts) *AwsOidcAuthAwsSecrets {
+	assertNotNil("token", token)
 	q := r.query.Select("loginOidc")
 	for i := len(opts) - 1; i >= 0; i-- {
 		// `durationSec` optional argument
@@ -353,7 +354,10 @@ type AwsOidcAuthLoginSessionOpts struct {
 	Region string
 }
 
-func (r *AwsOidcAuth) LoginSession(keyId string, key string, token string, opts ...AwsOidcAuthLoginSessionOpts) *AwsOidcAuthAwsSecrets {
+func (r *AwsOidcAuth) LoginSession(keyId *Secret, key *Secret, token *Secret, opts ...AwsOidcAuthLoginSessionOpts) *AwsOidcAuthAwsSecrets {
+	assertNotNil("keyId", keyId)
+	assertNotNil("key", key)
+	assertNotNil("token", token)
 	q := r.query.Select("loginSession")
 	for i := len(opts) - 1; i >= 0; i-- {
 		// `region` optional argument

@@ -601,11 +601,11 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 			if err != nil {
 				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
 			}
-			var root *Directory
-			if inputArgs["root"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["root"]), &root)
+			var src *Directory
+			if inputArgs["src"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["src"]), &src)
 				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg root", err))
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg src", err))
 				}
 			}
 			var dockerfile string
@@ -613,6 +613,13 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 				err = json.Unmarshal([]byte(inputArgs["dockerfile"]), &dockerfile)
 				if err != nil {
 					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg dockerfile", err))
+				}
+			}
+			var context string
+			if inputArgs["context"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["context"]), &context)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg context", err))
 				}
 			}
 			var token string
@@ -657,18 +664,18 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg sessionName", err))
 				}
 			}
-			return (*AwsEcrPush).BuildAndPushOidc(&parent, ctx, root, dockerfile, token, roleArn, tag, durationSec, region, sessionName)
+			return (*AwsEcrPush).BuildAndPushOidc(&parent, ctx, src, dockerfile, context, token, roleArn, tag, durationSec, region, sessionName)
 		case "BuildAndPush":
 			var parent AwsEcrPush
 			err = json.Unmarshal(parentJSON, &parent)
 			if err != nil {
 				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
 			}
-			var root *Directory
-			if inputArgs["root"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["root"]), &root)
+			var src *Directory
+			if inputArgs["src"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["src"]), &src)
 				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg root", err))
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg src", err))
 				}
 			}
 			var dockerfile string
@@ -676,6 +683,13 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 				err = json.Unmarshal([]byte(inputArgs["dockerfile"]), &dockerfile)
 				if err != nil {
 					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg dockerfile", err))
+				}
+			}
+			var context string
+			if inputArgs["context"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["context"]), &context)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg context", err))
 				}
 			}
 			var keyId string
@@ -713,7 +727,7 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg region", err))
 				}
 			}
-			return (*AwsEcrPush).BuildAndPush(&parent, ctx, root, dockerfile, keyId, key, token, tag, region)
+			return (*AwsEcrPush).BuildAndPush(&parent, ctx, src, dockerfile, context, keyId, key, token, tag, region)
 		case "PublishOidc":
 			var parent AwsEcrPush
 			err = json.Unmarshal(parentJSON, &parent)
@@ -853,11 +867,11 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 			if err != nil {
 				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
 			}
-			var root *Directory
-			if inputArgs["root"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["root"]), &root)
+			var src *Directory
+			if inputArgs["src"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["src"]), &src)
 				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg root", err))
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg src", err))
 				}
 			}
 			var dockerfile string
@@ -867,7 +881,14 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg dockerfile", err))
 				}
 			}
-			return (*AwsEcrPush).BuildDockerfile(&parent, root, dockerfile), nil
+			var context string
+			if inputArgs["context"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["context"]), &context)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg context", err))
+				}
+			}
+			return (*AwsEcrPush).BuildDockerfile(&parent, src, dockerfile, context), nil
 		default:
 			return nil, fmt.Errorf("unknown function %s", fnName)
 		}
@@ -878,8 +899,9 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 					WithFunction(
 						dag.Function("BuildAndPushOidc",
 							dag.TypeDef().WithKind(StringKind)).
-							WithArg("root", dag.TypeDef().WithObject("Directory"), FunctionWithArgOpts{Description: "Path to a root context directory for the Dockerfile build"}).
+							WithArg("src", dag.TypeDef().WithObject("Directory"), FunctionWithArgOpts{Description: "Path to a source directory"}).
 							WithArg("dockerfile", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "Path to a Dockerfile to build against", DefaultValue: JSON("\"Dockerfile\"")}).
+							WithArg("context", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "Path to a root context directory for the Dockerfile build", DefaultValue: JSON("\"./\"")}).
 							WithArg("token", dag.TypeDef().WithKind(StringKind), FunctionWithArgOpts{Description: "OIDC token"}).
 							WithArg("roleArn", dag.TypeDef().WithKind(StringKind), FunctionWithArgOpts{Description: "AWS IAM Role to assume"}).
 							WithArg("tag", dag.TypeDef().WithKind(StringKind), FunctionWithArgOpts{Description: "The image name assigned to the container before uploading (should start with an ECR address and optionally include a :tag)"}).
@@ -889,8 +911,9 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 					WithFunction(
 						dag.Function("BuildAndPush",
 							dag.TypeDef().WithKind(StringKind)).
-							WithArg("root", dag.TypeDef().WithObject("Directory"), FunctionWithArgOpts{Description: "Path to a root context directory for the Dockerfile build"}).
+							WithArg("src", dag.TypeDef().WithObject("Directory"), FunctionWithArgOpts{Description: "Path to a source directory for the Dockerfile build"}).
 							WithArg("dockerfile", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "Path to a Dockerfile to build against", DefaultValue: JSON("\"Dockerfile\"")}).
+							WithArg("context", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "Path to a root context directory for the Dockerfile build", DefaultValue: JSON("\"./\"")}).
 							WithArg("keyId", dag.TypeDef().WithKind(StringKind), FunctionWithArgOpts{Description: "AWS_ACCESS_KEY_ID"}).
 							WithArg("key", dag.TypeDef().WithKind(StringKind), FunctionWithArgOpts{Description: "AWS_SECRET_ACCESS_KEY"}).
 							WithArg("token", dag.TypeDef().WithKind(StringKind), FunctionWithArgOpts{Description: "AWS_SESSION_TOKEN"}).
@@ -910,9 +933,9 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 						dag.Function("Publish",
 							dag.TypeDef().WithKind(StringKind)).
 							WithArg("container", dag.TypeDef().WithObject("Container"), FunctionWithArgOpts{Description: "Container to publish"}).
-							WithArg("keyId", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "AWS_ACCESS_KEY_ID"}).
-							WithArg("key", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "AWS_SECRET_ACCESS_KEY"}).
-							WithArg("token", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "AWS_SESSION_TOKEN"}).
+							WithArg("keyId", dag.TypeDef().WithKind(StringKind), FunctionWithArgOpts{Description: "AWS_ACCESS_KEY_ID"}).
+							WithArg("key", dag.TypeDef().WithKind(StringKind), FunctionWithArgOpts{Description: "AWS_SECRET_ACCESS_KEY"}).
+							WithArg("token", dag.TypeDef().WithKind(StringKind), FunctionWithArgOpts{Description: "AWS_SESSION_TOKEN"}).
 							WithArg("tag", dag.TypeDef().WithKind(StringKind), FunctionWithArgOpts{Description: "The image name assigned to the container before uploading (should start with an ECR address and optionally include a :tag)"}).
 							WithArg("region", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "Default region", DefaultValue: JSON("\"us-east-1\"")})).
 					WithFunction(
@@ -924,8 +947,9 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 					WithFunction(
 						dag.Function("BuildDockerfile",
 							dag.TypeDef().WithObject("Container")).
-							WithArg("root", dag.TypeDef().WithObject("Directory")).
-							WithArg("dockerfile", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{DefaultValue: JSON("\"Dockerfile\"")}))), nil
+							WithArg("src", dag.TypeDef().WithObject("Directory")).
+							WithArg("dockerfile", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{DefaultValue: JSON("\"Dockerfile\"")}).
+							WithArg("context", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "Path to a root context directory for the Dockerfile build", DefaultValue: JSON("\"./\"")}))), nil
 	default:
 		return nil, fmt.Errorf("unknown object %s", parentName)
 	}

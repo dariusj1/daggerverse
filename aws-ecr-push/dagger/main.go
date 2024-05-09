@@ -20,7 +20,7 @@ func (ecr *AwsEcrPush) BuildAndPushOidc(ctx context.Context,
 	// +default="./"
 	context string,
 	// OIDC token
-	token string,
+	token *Secret,
 	// AWS IAM Role to assume
 	roleArn string,
 	// The image name assigned to the container before uploading (should start with an ECR address and optionally include a :tag)
@@ -54,11 +54,11 @@ func (ecr *AwsEcrPush) BuildAndPush(ctx context.Context,
 	// +default="./"
 	context string,
 	// AWS_ACCESS_KEY_ID
-	keyId string,
+	keyId *Secret,
 	// AWS_SECRET_ACCESS_KEY
-	key string,
+	key *Secret,
 	// AWS_SESSION_TOKEN
-	token string,
+	token *Secret,
 	// The image name assigned to the container before uploading (should start with an ECR address and optionally include a :tag)
 	tag string,
 	// AWS_DEFAULT_REGION
@@ -73,7 +73,7 @@ func (ecr *AwsEcrPush) PublishOidc(ctx context.Context,
 	// Container to publish
 	container *Container,
 	// OIDC token
-	token string,
+	token *Secret,
 	// AWS IAM Role to assume
 	roleArn string,
 	// The image name assigned to the container before uploading (should start with an ECR address and optionally include a :tag)
@@ -101,18 +101,18 @@ func (ecr *AwsEcrPush) PublishOidc(ctx context.Context,
 		fmt.Println("Failed to get ECR secret")
 		return "", err
 	}
-	return ecr.PublishContainer(ctx, container, tag, ecrSecret)
+	return ecr.PublishContainer(ctx, container, tag, dag.SetSecret("ecrSecret", ecrSecret))
 }
 
 func (ecr *AwsEcrPush) Publish(ctx context.Context,
 	// Container to publish
 	container *Container,
 	// AWS_ACCESS_KEY_ID
-	keyId string,
+	keyId *Secret,
 	// AWS_SECRET_ACCESS_KEY
-	key string,
+	key *Secret,
 	// AWS_SESSION_TOKEN
-	token string,
+	token *Secret,
 	// The image name assigned to the container before uploading (should start with an ECR address and optionally include a :tag)
 	tag string,
 	// Default region
@@ -127,16 +127,16 @@ func (ecr *AwsEcrPush) Publish(ctx context.Context,
 		fmt.Println("Failed to get ECR secret")
 		return "", err
 	}
-	return ecr.PublishContainer(ctx, container, tag, ecrSecret)
+	return ecr.PublishContainer(ctx, container, tag, dag.SetSecret("ecrSecret", ecrSecret))
 }
 
 func (ecr *AwsEcrPush) PublishContainer(ctx context.Context,
 	container *Container,
 	tag string,
-	ecrSecret string,
+	ecrSecret *Secret,
 ) (string, error) {
-	dag.SetSecret("registryPass", ecrSecret)
-	return container.WithRegistryAuth(tag, "AWS", dag.Secret("registryPass", dagger.SecretOpts{})).
+	return container.WithSecretVariable("registryPass", ecrSecret).
+		WithRegistryAuth(tag, "AWS", dag.Secret("registryPass", dagger.SecretOpts{})).
 		Publish(ctx, tag)
 }
 

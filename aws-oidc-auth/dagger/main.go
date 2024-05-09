@@ -41,7 +41,7 @@ func (aws *AwsOidcAuth) LoginOidc(
 	ctx context.Context,
 
 	// OIDC token
-	token string,
+	token *Secret,
 
 	// AWS IAM Role to assume
 	roleArn string,
@@ -65,7 +65,11 @@ func (aws *AwsOidcAuth) LoginOidc(
 		sessionName = fmt.Sprintf("OIDC_LOGIN-%s", region)
 	}
 
-	exported, err := aws.authenticateOidc(ctx, token, region, roleArn, sessionName, durationSec)
+	tokenStr, err := token.Plaintext(ctx)
+	if err != nil {
+		return nil, errors.Join(errors.New("cannot obtain OIDC token"), err)
+	}
+	exported, err := aws.authenticateOidc(ctx, tokenStr, region, roleArn, sessionName, durationSec)
 	if err != nil {
 		return nil, err
 	}
@@ -84,18 +88,30 @@ func (aws *AwsOidcAuth) LoginSession(
 	ctx context.Context,
 
 	// AWS_ACCESS_KEY_ID
-	keyId string,
+	keyId *Secret,
 	// AWS_SECRET_ACCESS_KEY
-	key string,
+	key *Secret,
 	// AWS_SESSION_TOKEN
-	token string,
+	token *Secret,
 	// AWS_DEFAULT_REGION
 	// +optional
 	// +default="us-east-1"
 	region string,
 ) (*AwsSecrets, error) {
 
-	exported, err := aws.authenticateSession(ctx, keyId, key, token, region)
+	keyIdStr, err := keyId.Plaintext(ctx)
+	if err != nil {
+		return nil, errors.Join(errors.New("cannot obtain AWS_ACCESS_KEY_ID"), err)
+	}
+	keyStr, err := key.Plaintext(ctx)
+	if err != nil {
+		return nil, errors.Join(errors.New("cannot obtain AWS_SECRET_ACCESS_KEY"), err)
+	}
+	tokenStr, err := token.Plaintext(ctx)
+	if err != nil {
+		return nil, errors.Join(errors.New("cannot obtain AWS_SESSION_TOKEN"), err)
+	}
+	exported, err := aws.authenticateSession(ctx, keyIdStr, keyStr, tokenStr, region)
 	if err != nil {
 		return nil, err
 	}
