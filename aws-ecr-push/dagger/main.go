@@ -136,7 +136,7 @@ func (ecr *AwsEcrPush) PublishContainer(ctx context.Context,
 	ecrSecret *Secret,
 ) (string, error) {
 	return container.WithSecretVariable("registryPass", ecrSecret).
-		WithRegistryAuth(tag, "AWS", dag.Secret("registryPass", dagger.SecretOpts{})).
+		WithRegistryAuth(tag, "AWS", ecrSecret).
 		Publish(ctx, tag)
 }
 
